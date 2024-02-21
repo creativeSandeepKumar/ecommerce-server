@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
         if(file.originalname.split(".").length > 1){
             fileExtension = file.originalname.substring(file.originalname.lastIndexOf("."));
         }
-
+        console.log("fileExtension",  fileExtension)
         const filenameWithoutExtension = file.originalname.toLowerCase().split(" ").join("-")?.split(".")[0];
         cb(null, filenameWithoutExtension + Date.now() + Math.ceil(Math.random() + 1e5) + fileExtension);
     }

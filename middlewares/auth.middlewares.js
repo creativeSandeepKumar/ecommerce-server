@@ -38,3 +38,5 @@ export const verifyPermission = (roles = []) =>
             throw new ApiError(403, "You are not allowed to perform this action");
         }
     });
+
+export const MAXIMUM_SUB_IMAGE_COUNT = 5;

@@ -41,8 +41,10 @@ app.use(session({
 
 
 import userRoutes from "./routes/user.routes.js";
+import productRoutes from "./routes/product.routes.js";
 
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/products", productRoutes);
 
 app.use("/", (req, res) => {
     res.send("Server is running successfully");

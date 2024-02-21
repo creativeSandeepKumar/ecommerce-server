@@ -6,3 +6,10 @@ export const mongoIdPathVariableValidator = (idName) => {
         param(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
     ]
 }
+
+
+export const mongoIdRequestBodyValidator = (idName) => {
+    return [
+        body(idName).notEmpty().isMongoId().withMessage(`Invalid ${idName}`),
+    ];
+}
