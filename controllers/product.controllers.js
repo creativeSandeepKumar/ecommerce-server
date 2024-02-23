@@ -69,6 +69,7 @@ const createProduct = asyncHandler(async (req, res) => {
     stock,
     specifications,
     activeOffers,
+    subImageVariants,
   } = req.body;
 
   // Check if the required fields are present
@@ -79,7 +80,8 @@ const createProduct = asyncHandler(async (req, res) => {
     !maxPrice ||
     !sellPrice ||
     !stock ||
-    !specifications
+    !specifications ||
+    !subImageVariants
   ) {
     return res
       .status(400)
@@ -97,6 +99,7 @@ const createProduct = asyncHandler(async (req, res) => {
     stock,
     specifications,
     activeOffers,
+    subImageVariants
   };
 
   // Add the main image URL to the product data (assuming it's already uploaded and available in the request body)
