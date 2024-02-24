@@ -1,5 +1,4 @@
 import mongoose, {Schema} from "mongoose";
-import { User } from "./user.model";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const categorySchema = new Schema(

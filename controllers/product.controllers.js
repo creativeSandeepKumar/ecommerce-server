@@ -2,61 +2,10 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import { getLocalPath, getStaticFilePath } from "../utils/helpers.js";
+import { getLocalPath, getMongoosePaginationOptions, getStaticFilePath, removeLocalFile } from "../utils/helpers.js";
+import { MAXIMUM_SUB_IMAGE_COUNT } from "../constants.js"
 
-// const createProduct = asyncHandler(async (req, res) => {
-//     const { name, description, category, maxPrice, sellPrice, discountPercentage, stock, specifications, mainImageVariant, subImageVariants, activeOffers  } = req.body;
 
-//     // to make this category model
-//     // const categoryToBeAdded = await Category.findById(category);
-
-//     // if(!categoryToBeAdded) {
-//     //     throw new ApiError(404, "Category does not exist");
-//     // }
-//     console.log("check subImages", req?.files)
-//     if(!req.files?.mainImage || !req.files?.mainImage.length) {
-//         throw new ApiError(400, "Main images is required");
-//     }
-
-//     const mainImageUrl = getStaticFilePath(req, res.files?.mainImage[0]?.filename);
-
-//     const mainImageLocalPath = getLocalPath(req.files?.mainImage[0]?.filename);
-
-//     const subImages = req.files.subImages && req.files.subImages?.length ? req.files.subImages.map((image) => {
-//         const imageUrl = getStaticFilePath(req, image.filename);
-//         const imageLocalPath = getLocalPath(image.filename);
-
-//         return {url: imageUrl, localPath: imageLocalPath}
-//     }) : [];
-
-//     const owner = req.user._id;
-
-//     const product = await Product.create({
-//         name,
-//         description,
-//         stock,
-//         category,
-//         maxPrice,
-//         sellPrice,
-//         owner,
-//         discountPercentage,
-//         specifications,
-//         mainImage: {
-//             url: mainImageUrl,
-//             localPath: mainImageLocalPath
-//         },
-//         subImageVariants: [
-//             {
-//                 name: "Green",
-//                 colorcode: "#008000",
-//                 images: subImages
-//             }
-//         ]
-//     });
-
-//     return res.status(201).json(new ApiResponse(201, product, "Product created successfully"));
-
-// });
 const createProduct = asyncHandler(async (req, res) => {
   // Destructure the required fields from the request body
   const {
@@ -71,22 +20,6 @@ const createProduct = asyncHandler(async (req, res) => {
     activeOffers,
     subImageVariants,
   } = req.body;
-
-  // Check if the required fields are present
-  if (
-    !category ||
-    !description ||
-    !name ||
-    !maxPrice ||
-    !sellPrice ||
-    !stock ||
-    !specifications ||
-    !subImageVariants
-  ) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "Required fields are missing"));
-  }
 
   // Construct the product object with the required fields
   const productData = {
@@ -128,15 +61,6 @@ export const createSubImages = asyncHandler( async (req, res, next) => {
       if (!req.files || req.files.length === 0) {
         throw new ApiError(400, 'Sub-images files are required')
       }
-  
-    //   const subImageUrls = [];
-      
-      // Here, you can handle the upload of each sub-image using any storage service (local file system, cloud storage, etc.)
-      // For example, if you're using a local file system:
-    //   for (const file of req.files) {
-    //     const subImageUrl = `/uploads/${file.filename}`; // Assuming uploads directory for storing sub-images
-    //     subImageUrls.push(subImageUrl);
-    //   }
 
           const subImages = req.files && req.files?.length ? req.files.map((image) => {
         const imageUrl = getStaticFilePath(req, image.filename);
@@ -144,7 +68,7 @@ export const createSubImages = asyncHandler( async (req, res, next) => {
 
         return {url: imageUrl, localPath: imageLocalPath}
     }) : [];
-  
+
       // Return the URLs of the uploaded sub-images in the response
       res.status(201).json(new ApiResponse(201, subImages?.[0], 'Sub-images uploaded successfully'));
   });
@@ -163,13 +87,170 @@ export const createMainImage = asyncHandler( async (req, res, next) => {
       if (!req.file) {
         throw new ApiError(400, null, 'Main image file is required')
       }
-  
-      // Here, you can handle the main image upload using any storage service (local file system, cloud storage, etc.)
-      // For example, if you're using a local file system:
-    //   const mainImageUrl = `/uploads/${req.file.filename}`; // Assuming uploads directory for storing main images
+      console.log("checkFilename", req.file?.fieldname);
       
       // Return the URL of the uploaded main image in the response
       res.status(201).json(new ApiResponse(201, { url: mainImageUrl, localPath: mainImageLocalPath }, 'Main image uploaded successfully'));
   });
 
-export { createProduct };
+export const updateMainImage = asyncHandler( async (req, res, next) => {
+  const { productId } = req.params;
+  const product = await Product.findById(productId);
+      // Check if main image file is included in the request
+      let mainImageUrl;
+      let mainImageLocalPath;
+
+
+          if(req.file?.filename) {
+            mainImageUrl = getStaticFilePath(req, req.file.filename);
+            mainImageLocalPath = getLocalPath(req.file.filename);
+            removeLocalFile(product?.mainImage?.localPath)
+            } else {
+              mainImageUrl = product?.mainImage?.url
+              mainImageLocalPath = product?.mainImage?.localPath
+            }
+      // Return the URL of the uploaded main image in the response
+      res.status(201).json(new ApiResponse(201, { url: mainImageUrl, localPath: mainImageLocalPath }, 'Main image uploaded successfully'));
+  });
+
+  export const updateSubImages = asyncHandler( async (req, res, next) => {
+    const { productId } = req.params;
+    const product = await Product.findById(productId);
+
+
+   let subImages = req.files && req.files?.length ? req.files.map((image) => {
+  const imageUrl = getStaticFilePath(req, image.filename);
+  const imageLocalPath = getLocalPath(image.filename);
+
+  return {url: imageUrl, localPath: imageLocalPath}
+}) : [];
+
+  const existedSubImages = product.subImageVariants?.images.length;
+
+  const newSubImages = subImages.length;
+
+  const totalSubImages = existedSubImages + newSubImages;
+
+  if(totalSubImages > MAXIMUM_SUB_IMAGE_COUNT) {
+    subImages?.map((img) => removeLocalFile(img.localPath));
+
+    throw new ApiError(400, "MAXIMUM " + MAXIMUM_SUB_IMAGE_COUNT + " sub images are allowed for a product. There are alreday " + existedSubImages + " sub images attached to this variant");
+  };
+
+  subImages = [...product?.subImageVariants?.images, ...subImages];
+
+
+// Return the URLs of the uploaded sub-images in the response
+res.status(201).json(new ApiResponse(201, subImages, 'Sub-images updated successfully'));
+});
+
+export const getAllProducts = asyncHandler(async(req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+
+  const productAggregate = Product.aggregate([{
+    $match: {}
+  }]);
+
+  const products = await Product.aggregatePaginate(productAggregate, getMongoosePaginationOptions({page, limit, customLabels: {
+    totalDocs: "totalProducts",
+    docs: "products",
+  }}));
+  
+  return res.status(200).json(new ApiResponse(200, products, "Products fetched successfully"));
+
+});
+
+const getProductById = asyncHandler(async(req, res) => {
+  const { productId } = req.params;
+
+  const product = await Product.findById(productId);
+
+  if(!product) {
+    throw new ApiError(404, "Product does not exist");
+  }
+
+  return res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
+
+});
+
+const updateProduct = asyncHandler(async(req, res) => {
+  const { productId } = req.params;
+  const {  category,
+    description,
+    name,
+    maxPrice,
+    sellPrice,
+    discountPercentage,
+    stock,
+    specifications,
+    activeOffers,
+    subImageVariants } = req.body;
+
+  const product = await Product.findById(productId);
+
+  if(!product) {
+    throw new ApiError(404, "Product does not exist")
+  }
+
+  // go in create main image and check main image and if new image uploaded then update url else keep old image
+    // Add the main image URL to the product data (assuming it's already uploaded and available in the request body)
+    let mainImage;
+    if (req.body.mainImage) {
+      mainImage = req.body.mainImage;
+    }
+  
+    // Add the sub-images URLs to the product data (assuming they're already uploaded and available in the request body)
+    let subImages;
+    if (subImageVariants.images.length > 0) {
+      subImages = subImageVariants.images;
+    }
+
+  const existedSubImages = product.subImageVariants[0]?.images.length;
+
+  const newSubImages = subImages.length;
+
+  const totalSubImages = existedSubImages + newSubImages;
+
+  if(totalSubImages > MAXIMUM_SUB_IMAGE_COUNT) {
+    console.log("check local path here", subImages?.map((img) => img.localPath));
+    subImages?.map((img) => removeLocalFile(img.localPath));
+
+    removeLocalFile(mainImage.localPath);
+
+    throw new ApiError(400, "MAXIMUM " + MAXIMUM_SUB_IMAGE_COUNT + " sub images are allowed for a product. There are alreday " + existedSubImages + " sub images attached to this variant");
+  };
+
+  const productData = {
+    category,
+    description,
+    name,
+    maxPrice,
+    sellPrice,
+    discountPercentage,
+    stock,
+    specifications,
+    activeOffers,
+    subImageVariants: [subImageVariants]
+  };
+
+  
+  subImages = [...product?.subImageVariants[0]?.images, ...subImages];
+  
+  productData.mainImage = mainImage;
+  productData.subImageVariants[0].images = subImages
+
+  const updatedProduct = await Product.findByIdAndUpdate(productId, {
+    $set: productData
+  });
+
+  if(product.mainImage.url !== mainImage.url) {
+    removeLocalFile(product.mainImage.localPath);
+  }
+
+
+  return res.status(200).json(new ApiResponse(200, updatedProduct, "Product updated successfully"));
+  
+
+});
+
+export { createProduct, getProductById, updateProduct };

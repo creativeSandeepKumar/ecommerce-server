@@ -6,7 +6,7 @@ export const getStaticFilePath = (req, fileName) => {
 
 
 export const getLocalPath = (fileName) => {
-    return `publib/images/${fileName}`
+    return `public/images/${fileName}`
 }
 
 export const removeLocalFile = (localPath) => {
@@ -17,3 +17,19 @@ export const removeLocalFile = (localPath) => {
         }
     })
 }
+
+export const getMongoosePaginationOptions = ({
+    page = 1,
+    limit = 10,
+    customLabels
+}) => {
+    return {
+        page: Math.max(page, 1),
+        limit: Math.max(limit, 1),
+        pagination: true,
+        customLabels: {
+            pagingCounter: "serialNumberCountFrom",
+            ...customLabels,
+        },
+    };
+};
