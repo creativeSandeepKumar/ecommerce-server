@@ -3,7 +3,9 @@ import { Product } from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { getLocalPath, getMongoosePaginationOptions, getStaticFilePath, removeLocalFile } from "../utils/helpers.js";
-import { MAXIMUM_SUB_IMAGE_COUNT } from "../constants.js"
+import { MAXIMUM_SUB_IMAGE_COUNT } from "../constants.js";
+import {Category} from "../models/category.model.js"; 
+import mongoose from "mongoose";
 
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -253,4 +255,94 @@ const updateProduct = asyncHandler(async(req, res) => {
 
 });
 
-export { createProduct, getProductById, updateProduct };
+const deleteProduct = asyncHandler(async (req, res) => {
+
+  const { productId } = req.params;
+
+  const product = await Product.findOneAndDelete({
+    _id: productId
+  });
+
+  if(!product) {
+    throw new ApiError(404, "Product does not exist");
+  }
+
+  const subImages = product.subImageVariants?.map((subimages) => subimages.images).flatMap((images) => images)
+
+  const productImages = [product.mainImage, ...subImages];
+
+  productImages.map((image) => {
+    removeLocalFile(image.localPath);
+  });
+
+  return res.status(200).json(new ApiResponse(200, { deletedProduct: product }, "Product deleted successfully"));
+});
+
+const getProductsByCategory = asyncHandler(async (req, res) => {
+  const { categoryId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  const category = await Category.findById(categoryId).select("name _id");
+
+  if(!category) {
+    throw new ApiError(404, "Category does not exist");
+  }
+
+  const productAggregate = Product.aggregate([
+    {
+      $match: {
+        category: new mongoose.Types.ObjectId(categoryId),
+      }
+    }
+  ]);
+
+  const products = await Product.aggregatePaginate(productAggregate, getMongoosePaginationOptions({
+    page,
+    limit,
+    customLabels: {
+      totalDocs: "TotalProducts",
+      docs: "products",
+    }
+  }));
+
+  return res.status(200).json(new ApiResponse(200, {...products, category}, "Category products fetched successfully"));
+
+});
+
+const removeProductSubVariants = asyncHandler(async (req, res) => {
+  const {productId, subImageVariantsId} = req.params;
+
+  const product = await Product.findById(productId);
+
+  if(!product) {
+    throw new ApiError(400, "product does not exist");
+  }
+
+  const updatedProduct = await Product.findByIdAndUpdate(
+    productId,
+    {
+      $pull: {
+        subImageVariants: {
+          _id: new mongoose.Types.ObjectId(subImageVariantsId),
+        }
+      }
+    },
+    {
+      new: true,
+    }
+  );
+
+  const removedSubImageVariants = product.subImageVariants?.find((images) => {
+    return images._id.toString() === subImageId;
+  });
+
+  
+
+  if(removedSubImageVariants) {
+    removeLocalFile(removedSubImageVariants.localPath);
+  }
+
+  return res.status(200).json(new ApiResponse(200, updatedProduct, "Sub images removed successfully"));
+
+})
+
+export { createProduct, getProductById, updateProduct, deleteProduct, getProductsByCategory, removeProductSubVariants };

@@ -16,8 +16,11 @@ import {
   createMainImage,
   createProduct,
   createSubImages,
+  deleteProduct,
   getAllProducts,
   getProductById,
+  getProductsByCategory,
+  removeProductSubVariants,
   updateProduct,
 } from "../controllers/product.controllers.js";
 import { mongoIdPathVariableValidator } from "../validators/common/mongodb.validators.js";
@@ -35,7 +38,7 @@ router
   .post(
     verifyJWT,
     verifyPermission([UserRolesEnum.ADMIN]),
-    createProductValidator(),
+    // createProductValidator(),
     validate,
     createProduct
   );
@@ -50,6 +53,23 @@ router
     // updateProductValidator(),
     validate,
     updateProduct
+  )
+  .delete(
+    verifyJWT,
+    verifyPermission([UserRolesEnum.ADMIN]),
+    mongoIdPathVariableValidator("productId"), 
+    // updateProductValidator(),
+    validate,
+    deleteProduct
   );
+
+  router.route("/category/:categoryId").get(mongoIdPathVariableValidator("categoryId"), validate, getProductsByCategory);
+
+
+  router.route("/remove/subimage/:productId/:subImageVariantsId").patch(
+    verifyJWT,
+    verifyPermission([UserRolesEnum.ADMIN]),
+    mongoIdPathVariableValidator("productId"),
+    mongoIdPathVariableValidator("subImageVariantsId"), validate, removeProductSubVariants);
 
 export default router;

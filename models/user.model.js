@@ -4,6 +4,7 @@ import { AvailableSocialLogins, AvailableUserRoles, USER_TEMPORARY_TOKEN_EXPIRY,
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { Cart } from "./cart.model.js"
 
 
 const userSchema = new Schema({
@@ -80,7 +81,19 @@ userSchema.pre("save", async function (next) {
 
 
 //In future here setup necessary setup
+userSchema.post("save", async function (user, next) {
+    const cart = await Cart.findOne({
+        owner: user._id
+    });
 
+    if(!cart) {
+        await Cart.create({
+            owner: user._id,
+            items: []
+        });
+    }
+    next();
+})
 
 userSchema.methods.isPasswordCorrect = async function(password) {
     return await bcrypt.compare(password, this.password);
