@@ -53,7 +53,7 @@ const getAddressById = asyncHandler(async(req, res) => {
         throw new ApiError(404, "Address does not exist");
     }
 
-    return res.status(200).json(200, address, "Address fetched successfully");
+    return res.status(200).json(new ApiResponse(200, address, "Address fetched successfully"));
 
 });
 
@@ -106,5 +106,4 @@ export {
     getAddressById,
     deleteAddress,
     updateAddress,
-    updateAddress
 }

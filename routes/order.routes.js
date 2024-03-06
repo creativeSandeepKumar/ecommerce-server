@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { verifyJWT, verifyPermission } from "../middlewares/auth.middlewares.js";
-import { mongoIdPathVariableValidator } from "../validators/common/mongodb.validators";
-import { validate } from "../validators/validate";
+import { mongoIdPathVariableValidator } from "../validators/common/mongodb.validators.js";
+import { validate } from "../validators/validate.js";
 import { generatePaypalOrder, generateRazorPayOrder, getOrderById, getOrderListAdmin, updateOrderStatus, verifyPaypalPayment, verifyRazorPayPayment } from "../controllers/order.controllers.js";
 import { orderUpdateStatusValidator, verifyPaypalPaymentValidator, verifyRazorpayPaymentValidator } from "../validators/order.validators.js";
 import { UserRolesEnum } from "../constants.js";

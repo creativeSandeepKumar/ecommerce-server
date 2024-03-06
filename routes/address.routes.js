@@ -12,7 +12,7 @@ router.use(verifyJWT);
 
 router.route("/").post(createAddressValidator(), validate, createAddress).get(getAllAddresses);
 
-router.route("/:addressId").get(mongoIdPathVariableValidator(addressId), validate, getAddressById)
+router.route("/:addressId").get(mongoIdPathVariableValidator("addressId"), validate, getAddressById)
 .delete(mongoIdPathVariableValidator("addressId"), validate, deleteAddress)
 .patch(updateAddressValidator(), mongoIdPathVariableValidator("addressId"), validate, updateAddress)
 

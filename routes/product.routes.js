@@ -38,7 +38,7 @@ router
   .post(
     verifyJWT,
     verifyPermission([UserRolesEnum.ADMIN]),
-    // createProductValidator(),
+    createProductValidator(),
     validate,
     createProduct
   );

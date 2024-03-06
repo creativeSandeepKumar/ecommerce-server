@@ -105,11 +105,16 @@ const paypalApi = async (endpoint, body = {}) => {
 };
 
 let razorpayInstance;
+class RazorPay {
+    constructor(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) {
+        // this.razorpay = RAZORPAY_KEY_ID
+    }
+}
 
 try {
     razorpayInstance = new RazorPay({
         key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
     })
 } catch (error) {
     console.error("RAZOEPAY ERROR: ", error);

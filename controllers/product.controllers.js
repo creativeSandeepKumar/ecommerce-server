@@ -20,7 +20,9 @@ const createProduct = asyncHandler(async (req, res) => {
     stock,
     specifications,
     activeOffers,
-    subImageVariants,
+    // subImageVariants,
+    mainImage,
+    subvariants,
   } = req.body;
 
   // Construct the product object with the required fields
@@ -34,21 +36,42 @@ const createProduct = asyncHandler(async (req, res) => {
     stock,
     specifications,
     activeOffers,
-    subImageVariants
+    mainImage,
+    subImageVariants: subvariants
   };
 
-  // Add the main image URL to the product data (assuming it's already uploaded and available in the request body)
-  if (req.body.mainImage) {
-    productData.mainImage = req.body.mainImage;
+  const handleRemoveLocalImage = () => {
+    let localpaths = subvariants.map((variants) => {
+      let images = variants.images?.map((images) => images?.localPath);
+      images = [...images];
+      return images;
+    });
+
+    const allurls = [...localpaths, mainImage?.localPath];
+
+    let mainurls = [].concat(...allurls);
+
+    mainurls.map((localurl) => {
+      removeLocalFile(localurl);
+    });
   }
 
-  // Add the sub-images URLs to the product data (assuming they're already uploaded and available in the request body)
-  if (req.body.subImages) {
-    productData.subImages = req.body.subImages;
+  const existedProduct = await Product.find({name});
+
+  if(existedProduct.length > 0) {
+    handleRemoveLocalImage();
+    throw new ApiError(404, "Product with this name already exists");
   }
+
+
 
   // Create the product in the database
   const product = await Product.create(productData);
+
+  if(!product) {
+    handleRemoveLocalImage();
+    throw new ApiError(400, "Something went wrong while creating product");
+  }
 
   // Respond with success message and created product data
   res

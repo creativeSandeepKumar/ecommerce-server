@@ -1,5 +1,5 @@
 import { body } from "express-validator"
-import { AvailableOrderStatuses } from "../constants";
+import { AvailableOrderStatuses } from "../constants.js";
 
 
 const verifyRazorpayPaymentValidator = () => {

@@ -2,6 +2,7 @@ import mongoose, {Schema} from "mongoose";
 
 import { 
     AvailableCouponTypes,
+    AvailableOrderStatuses,
     AvailablePaymentProviders,
     OrderStatusEnum,
     PaymentProviderEnum,
@@ -73,4 +74,4 @@ const orderSchema = new Schema(
 
 orderSchema.plugin(mongooseAggregatePaginate);
 
-export const Order = mongoose.model("Order");
+export const Order = mongoose.model("Order", orderSchema);

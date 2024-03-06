@@ -3,7 +3,7 @@ import {Coupon} from "../models/coupon.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { getCart } from "./cart.controllers.js";
 import { Cart } from "../models/cart.model.js";
-import { ApiResponse } from "../utils/ApiResponse";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { CouponTypesEnum } from "../constants.js";
 import { getMongoosePaginationOptions} from "../utils/helpers.js"
 import mongoose from "mongoose";

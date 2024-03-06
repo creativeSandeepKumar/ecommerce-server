@@ -54,24 +54,24 @@ const createProductValidator = () => {
       .isInt({ min: 0 }) // Enforce non-negative integer
       .withMessage("Stock must be a non-negative integer"),
       body("activeOffers") // Validate specifications sub-array
-      .isArray() // Ensure active offers is an array
+      // .isArray() // Ensure active offers is an array
       .optional()
       .isMongoId()
       .withMessage("Actice offers inavlid id"),
-      // body("specifications") // Validate specifications sub-array
-      // .isArray() // Ensure specifications is an array
-      // .notEmpty() // Require at least one specification
-      // .custom((value) => {
-      //   // Validate individual specifications
-      //   for (const spec of value) {
-      //     if (!spec.name || !spec.description) {
-      //       throw new ApiError("Each specification must have a name and description");
-      //     }
+      body("specifications") // Validate specifications sub-array
+      .isArray() // Ensure specifications is an array
+      .notEmpty() // Require at least one specification
+      .custom((value) => {
+        // Validate individual specifications
+        for (const spec of value) {
+          if (!spec.name || !spec.description) {
+            throw new ApiError("Each specification must have a name and description");
+          }
 
-      //     // Consider adding further validation for name and description (length, format)
-      //   }
-      //   return true; // Specifications array is valid
-      // }),
+          // Consider adding further validation for name and description (length, format)
+        }
+        return true; // Specifications array is valid
+      }),
   ];
 };
 
