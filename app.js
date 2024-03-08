@@ -45,6 +45,7 @@ import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import addressRoutes from "./routes/address.routes.js";
 import couponRoutes from "./routes/coupon.routes.js";
+import activeofferRoutes from "./routes/activeoffer.routes.js";
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
@@ -53,6 +54,7 @@ app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/address", addressRoutes);
 app.use("/api/v1/coupon", couponRoutes);
+app.use("/api/v1/activeoffer", activeofferRoutes);
 
 app.use("/", (req, res) => {
     res.send("Server is running successfully");

@@ -272,10 +272,8 @@ const updateProduct = asyncHandler(async(req, res) => {
     removeLocalFile(product.mainImage.localPath);
   }
 
-
   return res.status(200).json(new ApiResponse(200, updatedProduct, "Product updated successfully"));
   
-
 });
 
 const deleteProduct = asyncHandler(async (req, res) => {
