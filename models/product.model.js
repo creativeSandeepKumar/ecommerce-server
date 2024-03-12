@@ -2,75 +2,104 @@ import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const imageVariantSchema = new Schema({
-    name: String,
-    colorCode: String,
-    images: [
-        {
-            url: String,
-            localPath: String,
-        }
-    ]
+  name: String,
+  colorCode: String,
+  images: [
+    {
+      url: String,
+      localPath: String,
+    },
+  ],
 });
 
-const productSchema = new Schema({
+const productSchema = new Schema(
+  {
     category: {
-        type: Schema.Types.ObjectId,
-        ref: "Category",
-        required: true,
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
     description: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     mainImage: {
-        type: {
-            url: String,
-            localPath: String,
-        },
-        required: true,
+      type: {
+        url: String,
+        localPath: String,
+      },
+      required: true,
     },
     name: {
-        type: String,
-        required: true,
+      type: String,
+      required: true,
     },
     owner: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
     maxPrice: {
-        type: String,
-        default: 0,
+      type: String,
+      default: 0,
     },
     sellPrice: {
-        type: String,
-        default: 0,
+      type: String,
+      default: 0,
     },
     discountPercentage: {
-        type: String,
-        default: 0,
+      type: String,
+      default: 0,
+    },
+    bestfor: {
+      type: String,
+    },
+    noicecancellation: {
+      type: String,
+    },
+    dialshape: {
+      type: String,
+    },
+    display: {
+      type: String,
+    },
+    playback: {
+      type: String,
+    },
+    features: {
+      type: [
+        {
+          name: String,
+        },
+      ],
     },
     activeOffers: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: "ActiveOffer",
-        }
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ActiveOffer",
+      },
     ],
     stock: {
-        type: String,
-        default: 0,
+      type: String,
+      default: 0,
     },
     specifications: [
-        {
-            name: String,
+      {
+        heading: String,
+        specificationitems: [
+          {
             description: String,
-        }
+          },
+        ],
+      },
     ],
     mainImageVariant: {
-        type: Schema.Types.ObjectId,
-        ref: "imageVariantSchema" // referencing the imageVariantSchema directly
+      type: Schema.Types.ObjectId,
+      ref: "imageVariantSchema", // referencing the imageVariantSchema directly
     },
-    subImageVariants: [imageVariantSchema]
-}, {timestamps: true});
+    subImageVariants: [imageVariantSchema],
+  },
+  { timestamps: true }
+);
 
 productSchema.plugin(mongooseAggregatePaginate);
 

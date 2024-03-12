@@ -46,6 +46,12 @@ import orderRoutes from "./routes/order.routes.js";
 import addressRoutes from "./routes/address.routes.js";
 import couponRoutes from "./routes/coupon.routes.js";
 import activeofferRoutes from "./routes/activeoffer.routes.js";
+import bestforRoutes from "./routes/bestFor.routes.js";
+import diapshapeRoutes from "./routes/dialShape.routes.js";
+import featuresRoutes from "./routes/Features.routes.js";
+import noicecancellationRoutes from "./routes/noicecancellation.routes.js";
+import playbackRoutes from "./routes/playback.routes.js";
+import colorRoutes from "./routes/colors.routes.js";
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
@@ -55,6 +61,12 @@ app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/address", addressRoutes);
 app.use("/api/v1/coupon", couponRoutes);
 app.use("/api/v1/activeoffer", activeofferRoutes);
+app.use("/api/v1/bestfor", bestforRoutes);
+app.use("/api/v1/dialshape", diapshapeRoutes);
+app.use("/api/v1/features", featuresRoutes);
+app.use("/api/v1/noicecancellation", noicecancellationRoutes);
+app.use("/api/v1/playback", playbackRoutes);
+app.use("/api/v1/color", colorRoutes);
 
 app.use("/", (req, res) => {
     res.send("Server is running successfully");
