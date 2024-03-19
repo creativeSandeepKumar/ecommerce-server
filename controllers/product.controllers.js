@@ -20,6 +20,11 @@ const createProduct = asyncHandler(async (req, res) => {
     stock,
     specifications,
     activeOffers,
+    features,
+    noicecancellation,
+    playback,
+    dialshape,
+    bestfor,
     // subImageVariants,
     mainImage,
     subvariants,
@@ -37,8 +42,15 @@ const createProduct = asyncHandler(async (req, res) => {
     specifications,
     activeOffers,
     mainImage,
+    features,
+    noicecancellation,
+    playback,
+    dialshape,
+    bestfor,
     subImageVariants: subvariants
   };
+
+  console.log("subvaiant", subvariants);
 
   const handleRemoveLocalImage = () => {
     let localpaths = subvariants.map((variants) => {
@@ -138,7 +150,7 @@ export const updateMainImage = asyncHandler( async (req, res, next) => {
       res.status(201).json(new ApiResponse(201, { url: mainImageUrl, localPath: mainImageLocalPath }, 'Main image uploaded successfully'));
   });
 
-  export const updateSubImages = asyncHandler( async (req, res, next) => {
+export const updateSubImages = asyncHandler( async (req, res, next) => {
     const { productId } = req.params;
     const product = await Product.findById(productId);
 
@@ -169,34 +181,176 @@ export const updateMainImage = asyncHandler( async (req, res, next) => {
 res.status(201).json(new ApiResponse(201, subImages, 'Sub-images updated successfully'));
 });
 
-export const getAllProducts = asyncHandler(async(req, res) => {
+// export const getAllProducts = asyncHandler(async(req, res) => {
+//   const { page = 1, limit = 10 } = req.query;
+
+//   const productAggregate = Product.aggregate([{
+//     $match: {}
+//   }]);
+
+//   const products = await Product.aggregatePaginate(productAggregate, getMongoosePaginationOptions({page, limit, customLabels: {
+//     totalDocs: "totalProducts",
+//     docs: "products",
+//   }}));
+  
+//   return res.status(200).json(new ApiResponse(200, products, "Products fetched successfully"));
+
+// });
+
+// const getProductById = asyncHandler(async(req, res) => {
+//   const { productId } = req.params;
+
+//   const product = await Product.findById(productId);
+
+//   if(!product) {
+//     throw new ApiError(404, "Product does not exist");
+//   }
+
+//   return res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
+
+// });
+
+export const getAllProducts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
 
-  const productAggregate = Product.aggregate([{
-    $match: {}
-  }]);
+  const productAggregate = Product.aggregate([
+    {
+      $lookup: {
+        from: "features", // Lookup the Feature collection
+        localField: "features", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the Feature schema
+        as: "features", // Name for the output array
+      },
+    },
+    {
+      $lookup: {
+        from: "playbacks", // Lookup the Playback collection
+        localField: "playback", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the Playback schema
+        as: "playback", // Name for the output array (singular as it's an ObjectId)
+      },
+    },
+    {
+      $lookup: {
+        from: "displays", // Lookup the Display collection
+        localField: "display", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the Display schema
+        as: "display", // Name for the output array (singular as it's an ObjectId)
+      },
+    },
+    {
+      $lookup: {
+        from: "dialshapes", // Lookup the Dialshape collection
+        localField: "dialshape", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the Dialshape schema
+        as: "dialshape", // Name for the output array (singular as it's an ObjectId)
+      },
+    },
+    {
+      $lookup: {
+        from: "noicecancellations", // Lookup the Noicecancellation collection
+        localField: "noicecancellation", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the Noicecancellation schema
+        as: "noicecancellation", // Name for the output array (singular as it's an ObjectId)
+      },
+    },
+    {
+      $lookup: {
+        from: "colors", // Lookup the imageVariant schema (assuming the collection name is lowercase)
+        localField: "subImageVariants.color", // Foreign field in the Product schema
+        foreignField: "_id", // Local field in the imageVariant schema
+        as: "colors", // Name for the output array (singular as it's an ObjectId)
+        pipeline: [
+          {
+            $project: {
+              name: 1,
+              colorCode: 1,
+            }
+          }
+        ]
+      },
+    },
+    // {
+    //   $unwind: "$features"
+    // },
+    {
+      $project: {
+         // Exclude the ObjectId from the response
+        name: 1,
+        sellPrice: 1,
+        maxPrice: 1,
+        discountPercentage: 1,
+        // ... other desired product fields
+        color: { $ifNull: ["$colors", null] }, // Access color from mainImageVariant
+        features: { $ifNull: ["$features.name", null] },
+        playback: { $arrayElemAt: ["$playback.name", 0] }, // Get the first element (assuming there's one playback object)
+        display: { $arrayElemAt: ["$display.name", 0] }, // Get the first element (assuming there's one display object)
+        dialshape: { $arrayElemAt: ["$dialshape.name", 0] }, // Get the first element (assuming there's one dialshape object)
+        noicecancellation: { $arrayElemAt: ["$noicecancellation.name", 0] }, // Get the first element (assuming there's one noicecancellation object)
+        mainImage: 1,
+      },
+    },
+    {
+      $sort: { name: 1 }, // Sort by name (optional)
+    },
+    {
+      $skip: limit * (page - 1), // Apply pagination (skip for current page)
+    },
+    {
+      $limit: limit, // Apply pagination (limit number of products per page)
+    },
+  ]);
 
-  const products = await Product.aggregatePaginate(productAggregate, getMongoosePaginationOptions({page, limit, customLabels: {
-    totalDocs: "totalProducts",
-    docs: "products",
-  }}));
-  
+  const products = await Product.aggregatePaginate(productAggregate, getMongoosePaginationOptions({
+    page,
+    limit,
+    customLabels: {
+      totalDocs: "totalProducts",
+      docs: "products",
+    },
+  }));
+
   return res.status(200).json(new ApiResponse(200, products, "Products fetched successfully"));
-
 });
 
-const getProductById = asyncHandler(async(req, res) => {
+
+const getProductById = asyncHandler(async (req, res) => {
   const { productId } = req.params;
 
-  const product = await Product.findById(productId);
+  // Find the product by ID and populate 'color' within subImageVariants and mainImageVariant
+  const product = await Product.findById(productId)
+      .populate({
+          path: 'subImageVariants.color', // Populate color for each subImageVariant
+      });
 
-  if(!product) {
+  if (!product) {
     throw new ApiError(404, "Product does not exist");
   }
 
-  return res.status(200).json(new ApiResponse(200, product, "Product fetched successfully"));
+  // Extract color information from populated subImageVariants
+  const subImageVariantColors = product.subImageVariants;
+  let formattedSubVariantColors = []; // Empty array to store formatted color info
 
+  if (subImageVariantColors) {
+    for (const subVariant of subImageVariantColors) {
+      const colorInfo = {
+          name: subVariant.color.name,
+          colorCode: subVariant.color.colorCode,
+      };
+      formattedSubVariantColors.push(colorInfo); // Add formatted color info to the array
+    }
+  }
+
+  // Modify response object to include formatted color information
+  const response = {
+    ...product._doc, // Spread operator to include all product properties
+    subImageVariantColors: formattedSubVariantColors,
+  };
+
+  return res.status(200).json(new ApiResponse(200, response, "Product fetched successfully"));
 });
+
+
 
 const updateProduct = asyncHandler(async(req, res) => {
   const { productId } = req.params;

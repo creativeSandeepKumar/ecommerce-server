@@ -5,9 +5,9 @@ import { getMongoosePaginationOptions } from "../utils/helpers.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const createColor = asyncHandler(async (req, res) => {
-    const { name } = req.body;
+    const { name, colorCode } = req.body;
 
-    const color = await Color.create({name, owner: req.user._id});
+    const color = await Color.create({name, colorCode, owner: req.user._id});
 
     return res.status(201).json(new ApiResponse(200, color, "Color created successfully"));
 });

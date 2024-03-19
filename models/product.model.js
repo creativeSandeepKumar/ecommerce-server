@@ -2,8 +2,11 @@ import mongoose, { Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const imageVariantSchema = new Schema({
-  name: String,
-  colorCode: String,
+  color: {
+    type: Schema.Types.ObjectId,
+    ref: "Color",
+    required: true,
+  },
   images: [
     {
       url: String,
@@ -51,24 +54,29 @@ const productSchema = new Schema(
       default: 0,
     },
     bestfor: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Bestfor",
     },
-    noicecancellation: {
-      type: String,
+    noicecancellation:{
+      type: Schema.Types.ObjectId,
+      ref: "Noicecancellation",
     },
     dialshape: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Dialshape",
     },
     display: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "Display",
     },
-    playback: {
-      type: String,
+    playback:{
+      type: Schema.Types.ObjectId,
+      ref: "Playback",
     },
     features: {
-      type: [
-        {
-          name: String,
+      type: [{
+          type: Schema.Types.ObjectId,
+          ref: "Feature",
         },
       ],
     },

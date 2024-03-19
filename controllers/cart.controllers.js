@@ -38,7 +38,11 @@ export const getCart = async (userId) => {
                 coupon: {$first: "$coupon"},
                 cartTotal: {
                     $sum: {
-                        $multiply: ["$product.price", "$quantity"],
+                        // $multiply: ["$product.sellPrice", "$quantity"],
+                        $multiply: [
+                            { $convert: { input: "$product.sellPrice", to: "decimal" } }, // Convert to decimal
+                            "$quantity"
+                          ]
                     }
                 }
             }
@@ -51,20 +55,42 @@ export const getCart = async (userId) => {
             as: "coupon"
            }
         },
-        // {
-        //     $addFields: {
-        //         discountedTotal: {
-        //             $ifNull: [
-        //                 {
-        //                     $subtract: ["$cartTotal", "$coupon.discountValue"],
-        //                 },
-        //                 "$cartTotal",
-        //             ]
-        //         }
-        //     }
-        // }
+        {
+            $addFields: {
+              // As lookup returns an array we access the first item in the lookup array
+              coupon: { $first: "$coupon" },
+            },
+          },
+        {
+            $addFields: {
+                discountedTotal: {
+                    $ifNull: [
+                        {
+                            $subtract: ["$cartTotal", "$coupon.discountValue"],
+                        },
+                        "$cartTotal",
+                    ]
+                }
+            }
+        },
+        {
+            $project: {
+              _id: "$_id",
+              items: 1,
+              coupon: 1,
+              cartTotal: {
+                $toString: { $ifNull: ["$cartTotal", "0"] }  // Handle potential null values
+              },
+              discountedTotal: {
+                $toString: { $ifNull: ["$discountedTotal", "0"] }
+              }
+            }
+          }
+          
     ]);
-
+  
+      
+      
     return (
         cartAggregation[0] ?? {
             _id: null,
@@ -137,8 +163,6 @@ const addItemOrUpdateItemQuantity = asyncHandler(async(req, res) => {
     await cart.save({ validateBeforeSave: true });
 
     const newCart = await getCart(req.user._id);
-
-    console.log("check new Cart", newCart);
 
     return res.status(200).json(new ApiResponse(200, newCart, "Item added successfully"));
 
