@@ -20,6 +20,35 @@ export const getCart = async (userId) => {
                 localField: "items.productId",
                 foreignField: "_id",
                 as: "product",
+                pipeline: [
+                    {
+                        $lookup: {
+                          from: "colors", // Lookup the imageVariant schema (assuming the collection name is lowercase)
+                          localField: "subImageVariants.color", // Foreign field in the Product schema
+                          foreignField: "_id", // Local field in the imageVariant schema
+                          as: "colors", // Name for the output array (singular as it's an ObjectId)
+                          pipeline: [
+                            {
+                              $project: {
+                                name: 1,
+                                colorCode: 1,
+                              }
+                            }
+                          ]
+                        },
+                      },
+                      {
+                        $project: {
+                            name: 1,
+                            sellPrice: 1,
+                            maxPrice: 1,
+                            discountPercentage: 1,
+                            // ... other desired product fields
+                            color: { $ifNull: ["$colors", null] }, // Access color from mainImageVariant
+                            mainImage: 1,
+                        }
+                      }
+                ]
             }
         },
         {
@@ -141,7 +170,7 @@ const addItemOrUpdateItemQuantity = asyncHandler(async(req, res) => {
         throw new ApiError(404, "Product does not exist")
     }
 
-    if(quantity > product.stock) {
+    if(Number(quantity) > Number(product.stock)) {
         throw new ApiError(400, product.stock > 0 ? "Only " + product.stock + " Products are remaining. But you are adding " + quantity : "Product is out of stock");
     }
 
@@ -168,7 +197,6 @@ const addItemOrUpdateItemQuantity = asyncHandler(async(req, res) => {
 
 
 });
-
 
 const removeItemFromCart = asyncHandler(async(req, res) => {
     const { productId } = req.params;

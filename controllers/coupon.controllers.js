@@ -87,7 +87,7 @@ const applyCoupon = asyncHandler(async (req, res) => {
 
     const newCart = await getCart(req.user._id);
 
-    return res.status(200).json(new ApiResponse(200, new newCart, "Coupon applied successfully"));
+    return res.status(200).json(new ApiResponse(200, new ApiResponse(201, newCart, "Coupon applied successfully")));
 
 });
 
@@ -167,12 +167,14 @@ const getValidCouponsForCustomers = asyncHandler(async(req, res) => {
     const userCart = await getCart(req.user._id);
     const cartTotal = userCart.cartTotal;
 
+    console.log("check cart total", cartTotal);
+
     const couponAggregate = Coupon.aggregate([
         {
             $match: {
-                startDate: {
-                    $lt: new Date(),
-                },
+                // startDate: {
+                //     $lt: new Date(),
+                // },
                 expiryDate: {
                     $gt: new Date(),
                 },
@@ -180,7 +182,7 @@ const getValidCouponsForCustomers = asyncHandler(async(req, res) => {
                     $eq: true
                 },
                 minimumCartValue: {
-                    $lte: cartTotal,
+                    $lte: Number(cartTotal),
                 }
             }
         }
